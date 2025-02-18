@@ -68,46 +68,33 @@ services:
         max-size: "1m"
         max-file: "1"
 
-  ollama:
-    container_name: ollama
-    image: ollama/ollama:latest
-    restart: unless-stopped
-    networks:
-      - ai_network
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - capabilities: [ gpu ]
-
   openwebui:
-    container_name: open-webui
-    image: ghcr.io/open-webui/open-webui:latest
+    container_name: openwebui
+    image: ghcr.io/open-webui/open-webui:main
     restart: unless-stopped
     networks:
-      - ai_network
+      - searxng
     ports:
-      - "3000:8080"
+      - "127.0.0.1:8181:8080"
     environment:
-      - OLLAMA_API_BASE_URL=http://ollama:11434/api
-      - USERNAME=${OPENWEBUI_USERNAME:-admin}
-      - PASSWORD=${OPENWEBUI_PASSWORD:-password}
-    volumes:
-      - openwebui_data:/data
+      - SEARXNG_URL=http://searxng:8080
+      - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}
+      - CORS_ALLOW_ORIGINS=*
     depends_on:
-      - ollama
+      - searxng
+    volumes:
+      - openwebui-data:/app/backend/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
 
 networks:
   searxng:
-  ai_network:
 
 volumes:
   caddy-data:
   caddy-config:
   valkey-data2:
-  ollama_data:
-  openwebui_data:
+  openwebui-data:
