@@ -1,6 +1,6 @@
 *~
 
-searxng-ex/
+searxng/
 .idea
 .env
 searxng-docker.service
