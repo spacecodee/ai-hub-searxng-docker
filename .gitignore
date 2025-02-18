@@ -1,6 +1,7 @@
 *~
 
-searxng/
+searxng/limiter.toml
+searxng/settings.yml
 .idea
 .env
 searxng-docker.service

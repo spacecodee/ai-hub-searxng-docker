@@ -1,5 +1,3 @@
-version: "3.7"
-
 services:
   caddy:
     container_name: caddy
@@ -70,10 +68,46 @@ services:
         max-size: "1m"
         max-file: "1"
 
+  ollama:
+    container_name: ollama
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    networks:
+      - ai_network
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [ gpu ]
+
+  openwebui:
+    container_name: open-webui
+    image: ghcr.io/open-webui/open-webui:latest
+    restart: unless-stopped
+    networks:
+      - ai_network
+    ports:
+      - "3000:8080"
+    environment:
+      - OLLAMA_API_BASE_URL=http://ollama:11434/api
+      - USERNAME=${OPENWEBUI_USERNAME:-admin}
+      - PASSWORD=${OPENWEBUI_PASSWORD:-password}
+    volumes:
+      - openwebui_data:/data
+    depends_on:
+      - ollama
+
 networks:
   searxng:
+  ai_network:
 
 volumes:
   caddy-data:
   caddy-config:
   valkey-data2:
+  ollama_data:
+  openwebui_data:
