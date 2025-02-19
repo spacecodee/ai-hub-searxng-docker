@@ -94,8 +94,6 @@ services:
       - ollama
     volumes:
       - openwebui-data:/app/backend/data
-    extra_hosts:
-      - host.docker.internal:host-gateway
     logging:
       driver: "json-file"
       options:
