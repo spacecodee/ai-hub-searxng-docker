@@ -49,7 +49,7 @@ services:
     networks:
       - searxng
     ports:
-      - "127.0.0.1:8080:8080"
+      - "8080:8080"
     volumes:
       - ./searxng:/etc/searxng:rw
     environment:
@@ -65,8 +65,19 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "1m"
+        max-size: "4m"
         max-file: "1"
+
+  ollama:
+    volumes:
+      - ollama:/root/.ollama
+    container_name: ollama
+    pull_policy: always
+    tty: true
+    restart: unless-stopped
+    image: ollama/ollama:${OLLAMA_DOCKER_TAG-latest}
+    networks:
+      - searxng
 
   openwebui:
     container_name: openwebui
@@ -75,15 +86,16 @@ services:
     networks:
       - searxng
     ports:
-      - "127.0.0.1:8181:8080"
+      - "3000:8080"
     environment:
-      - SEARXNG_URL=http://searxng:8080
-      - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}
       - CORS_ALLOW_ORIGINS=*
     depends_on:
       - searxng
+      - ollama
     volumes:
       - openwebui-data:/app/backend/data
+    extra_hosts:
+      - host.docker.internal:host-gateway
     logging:
       driver: "json-file"
       options:
@@ -98,3 +110,4 @@ volumes:
   caddy-config:
   valkey-data2:
   openwebui-data:
+  ollama: { }

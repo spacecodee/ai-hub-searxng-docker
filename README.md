@@ -1,7 +1,7 @@
 # searxng-docker
 
 Create a new SearXNG instance in five minutes using Docker
-
+#### http://localhost:port/search?q=<query>
 ## What is included?
 
 | Name | Description | Docker image | Dockerfile |
