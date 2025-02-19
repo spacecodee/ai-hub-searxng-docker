@@ -30,6 +30,13 @@ RUN mkdir -p /app/models/checkpoints \
     /app/output \
     /app/input
 
+# Install ComfyUI-Manager
+WORKDIR /app/custom_nodes
+RUN git clone https://github.com/ltdrdata/ComfyUI-Manager.git
+WORKDIR /app/custom_nodes/ComfyUI-Manager
+RUN pip install -r requirements.txt
+WORKDIR /app
+
 # Expose the port ComfyUI runs on
 EXPOSE 8188
 
