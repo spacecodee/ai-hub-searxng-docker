@@ -9,3 +9,11 @@ caddy
 srv
 searxng/uwsgi.ini
 console.log
+comfyui/models/checkpoints/
+comfyui/models/controlnet/
+comfyui/models/embeddings/
+comfyui/models/loras/
+comfyui/models/upscale_models/
+comfyui/models/vae/
+comfyui/output/
+comfyui/custom_nodes/
