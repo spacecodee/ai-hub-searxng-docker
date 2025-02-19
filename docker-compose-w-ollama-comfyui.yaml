@@ -104,6 +104,7 @@ services:
         max-file: "1"
 
   comfyui:
+    container_name: comfyui
     build:
       context: .
       dockerfile: comfyui/Dockerfile
