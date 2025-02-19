@@ -1,115 +1,171 @@
-# searxng-docker
+# AI Hub with SearXNG, Open WebUI, ComfyUI, and Ollama
 
-Create a new SearXNG instance in five minutes using Docker
-#### http://localhost:port/search?q=<query>
-## What is included?
+This repository contains Docker Compose configurations for setting up an AI hub that includes:
 
-| Name | Description | Docker image | Dockerfile |
-| -- | -- | -- | -- |
-| [Caddy](https://github.com/caddyserver/caddy) | Reverse proxy (create a LetsEncrypt certificate automatically) | [docker.io/library/caddy:2-alpine](https://hub.docker.com/_/caddy)           | [Dockerfile](https://github.com/caddyserver/caddy-docker/blob/master/Dockerfile.tmpl) |
-| [SearXNG](https://github.com/searxng/searxng) | SearXNG by itself                                              | [docker.io/searxng/searxng:latest](https://hub.docker.com/r/searxng/searxng) | [Dockerfile](https://github.com/searxng/searxng/blob/master/Dockerfile)               |
-| [Valkey](https://github.com/valkey-io/valkey) | In-memory database                                             | [docker.io/valkey/valkey:8-alpine](https://hub.docker.com/r/valkey/valkey)        | [Dockerfile](https://github.com/valkey-io/valkey-container/blob/mainline/Dockerfile.template)             |
+- SearXNG (Privacy-focused metasearch engine)
+- Open WebUI (Web interface for Ollama)
+- ComfyUI (Advanced Generate Image Interface)
+- Ollama (Local LLM runner)
 
-## How to use it
-There are two ways to host SearXNG. The first one doesn't require any prior knowledge about self-hosting and thus is recommended for beginners. It includes caddy as a reverse proxy and automatically deals with the TLS certificates for you. The second one is recommended for more advanced users that already have their own reverse proxy (e.g. Nginx, HAProxy, ...) and probably some other services running on their machine. The first few steps are the same for both installation methods however.
+## Components
 
-1. [Install docker](https://docs.docker.com/install/)
-2. Get searxng-docker
-  ```sh
-  cd /usr/local
-  git clone https://github.com/searxng/searxng-docker.git
-  cd searxng-docker
-  ```
-3. Edit the [.env](https://github.com/searxng/searxng-docker/blob/master/.env) file to set the hostname and an email
-4. Generate the secret key `sed -i "s|ultrasecretkey|$(openssl rand -hex 32)|g" searxng/settings.yml`
-5. Edit [searxng/settings.yml](https://github.com/searxng/searxng-docker/blob/master/searxng/settings.yml) according to your needs
+| Name                                                   | Description                       | Port             |
+|--------------------------------------------------------|-----------------------------------|------------------|
+| [SearXNG](https://github.com/searxng/searxng)          | Privacy-focused metasearch engine | 8080             |
+| [Open WebUI](https://github.com/open-webui/open-webui) | Web interface for Ollama          | 3000             |
+| [ComfyUI](https://github.com/comfyanonymous/ComfyUI)   | Stable Diffusion interface        | 8188             |
+| [Ollama](https://github.com/ollama/ollama)             | Local LLM runner                  | 11434 (internal) |
+| [Caddy](https://github.com/caddyserver/caddy)          | Reverse proxy                     | 80, 443          |
+| [Valkey](https://github.com/valkey-io/valkey)          | In-memory database                | internal         |
 
-> [!NOTE]
-> On the first run, you must remove `cap_drop: - ALL` from the `docker-compose.yaml` file for the `searxng` service to successfully create `/etc/searxng/uwsgi.ini`. This is necessary because the `cap_drop: - ALL` directive removes all capabilities, including those required for the creation of the `uwsgi.ini` file. After the first run, you should re-add `cap_drop: - ALL` to the `docker-compose.yaml` file for security reasons.
+## Prerequisites
 
-> [!NOTE]
-> Windows users can use the following powershell script to generate the secret key:
-> ```powershell
-> $randomBytes = New-Object byte[] 32
-> (New-Object Security.Cryptography.RNGCryptoServiceProvider).GetBytes($randomBytes)
-> $secretKey = -join ($randomBytes | ForEach-Object { "{0:x2}" -f $_ })
-> (Get-Content searxng/settings.yml) -replace 'ultrasecretkey', $secretKey | Set-Content searxng/settings.yml
-> ```
+1. [Install Docker](https://docs.docker.com/install/)
+2. [Install Docker Compose](https://docs.docker.com/compose/install/)
+3. For ComfyUI: NVIDIA GPU with appropriate drivers installed
+4. Git
+5. **Mandatory** | Go to the open webui docs before you run any docker compose, you need to follow the steps to create
+   the necessary
+   files to run searxng with open
+   webui. [Open WebUI Docs - SearXNG](https://docs.openwebui.com/tutorials/web-search/searxng)
 
-### Method 1: With Caddy included (recommended for beginners)
-6. Run SearXNG in the background: `docker compose up -d`
+## Docker Compose Files
 
-### Method 2: Bring your own reverse proxy (experienced users)
-6. Remove the caddy related parts in `docker-compose.yaml` such as the caddy service and its volumes.
-7. Point your reverse proxy to the port set for the `searxng` service in `docker-compose.yml` (8080 by default).
-8. Generate and configure the required TLS certificates with the reverse proxy of your choice.
-9. Run SearXNG in the background: `docker compose up -d`
+There are three docker compose, those are:
 
-> [!NOTE]
-> You can change the port `searxng` listens on inside the docker container (e.g. if you want to operate in `host` network mode) with the `BIND_ADDRESS` environment variable (defaults to `0.0.0.0:8080`). The environment variable can be set directly inside `docker-compose.yaml`.
+1. `docker-compose-w-ollama-comfyui.yaml` - This docker compose file includes all the services, SearXNG, Open WebUI,
+   ComfyUI, and Ollama.
+2. `docker-compose-w-ollama.yaml` - This docker compose file includes SearXNG, Open WebUI, and Ollama.
+3. `docker-compose.yaml` - This docker compose file includes only SearXNG with SearXNG. (This option is better if you
+   run ollama in a server like runpod, and it exposes the port 11434 through a URL, so, you can use this docker in your local machine keeping the searxng and open webui configurations in your local machine)
 
-## Troubleshooting - How to access the logs
+## Quick Start (Local Development)
 
-To access the logs from all the containers use: `docker compose logs -f`.
+1. Clone the repository:
 
-To access the logs of one specific container:
-
-- Caddy: `docker compose logs -f caddy`
-- SearXNG: `docker compose logs -f searxng`
-- Valkey: `docker compose logs -f redis`
-
-### Start SearXNG with systemd
-
-You can skip this step if you don't use systemd.
-1. Copy the service template file:
-   ```sh
-   cp searxng-docker.service.template searxng-docker.service
-   ```
-  
-2. Edit the content of ```WorkingDirectory``` in the ```searxng-docker.service``` file (only if the installation path is different from ```/usr/local/searxng-docker```)
-   
-3. Enable the service:
-   ```sh
-   systemctl enable $(pwd)/searxng-docker.service
-   ```
-
-4. Start the service:
-   ```sh
-   systemctl start searxng-docker.service
-   ```
-
-**Note:** Ensure the service file path matches your installation directory before enabling it.
-
-## Note on the image proxy feature
-
-The SearXNG image proxy is activated by default.
-
-The default [Content-Security-Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy) allows the browser to access to ```${SEARXNG_HOSTNAME}``` and ```https://*.tile.openstreetmap.org;```.
-
-If some users want to disable the image proxy, you have to modify [./Caddyfile](https://github.com/searxng/searxng-docker/blob/master/Caddyfile). Replace the ```img-src 'self' data: https://*.tile.openstreetmap.org;``` by ```img-src * data:;```.
-
-## Multi Architecture Docker images
-
-Supported architecture:
-
-- amd64
-- arm64
-- arm/v7
-
-## How to update ?
-
-To update the SearXNG stack:
-
-```sh
-git pull
-docker compose pull
-docker compose up -d
+```bash
+git clone https://github.com/spacecodee/ai-hub-searxng-docker.git
+cd ai-hub-searxng-docker
 ```
 
-Or the old way (with the old docker-compose version):
+2. Create a `.env` file in the root directory:
 
-```sh
-git pull
-docker-compose pull
-docker-compose up -d
+```env
+SEARXNG_HOSTNAME=localhost
+
+# Adjust these values based on your system's capabilities
+SEARXNG_UWSGI_WORKERS=6
+SEARXNG_UWSGI_THREADS=6
 ```
+
+3. Start the services:
+
+```bash
+docker compose -f docker-compose-w-ollama-comfyui.yaml up -d
+```
+
+## Accessing the Services
+
+After starting the services, you can access them at:
+
+- SearXNG: http://localhost:8080
+- Open WebUI: http://localhost:3000
+- ComfyUI: http://localhost:8188
+
+**If you want to run this docker-compose in your local machine that is connected to any server, you need to forward the
+ports using ssh:**
+
+```bash
+ssh -L 8080:localhost:8080 -L 3000:localhost:3000 -L 8188:localhost:8188 user@server-ip
+```
+
+## Configuring Open WebUI with SearXNG
+
+Open WebUI can be integrated with SearXNG to provide web search capabilities. To set this up:
+
+1. Access Open WebUI at http://localhost:3000
+2. Go to Settings > Extensions
+3. Enable the Web Search extension
+4. Configure the SearXNG settings:
+    - SearXNG URL: `http://your-ip-or-container-name:8080/search?q=<query>` (Must be like that)
+    - Search Path: `/search`
+
+For more detailed information about the Open WebUI and SearXNG integration, visit
+the [official documentation](https://docs.openwebui.com/tutorials/web-search/searxng).
+
+## ComfyUI Information
+
+The ComfyUI installation includes:
+
+- Base ComfyUI
+- ComfyUI-Manager (automatically installed on startup)
+- Support for custom nodes
+
+### ComfyUI Directory Structure:
+
+```
+comfyui/
+├── models/      # Place your models here
+├── output/      # Generated images appear here
+├── input/       # Place input images here
+└── custom_nodes/ # Custom nodes directory
+```
+
+## Updating
+
+To update the services:
+
+```bash
+# Pull the latest changes
+git pull
+
+# Rebuild and restart the containers
+docker compose -f docker-compose-w-ollama-comfyui.yaml down
+docker compose -f docker-compose-w-ollama-comfyui.yaml up -d --build
+```
+
+## Troubleshooting
+
+### Viewing Logs
+
+To view logs for all services:
+
+```bash
+docker compose -f docker-compose-w-ollama-comfyui.yaml logs -f
+```
+
+For specific services:
+
+```bash
+# SearXNG logs
+docker compose -f docker-compose-w-ollama-comfyui.yaml logs -f searxng
+
+# ComfyUI logs
+docker compose -f docker-compose-w-ollama-comfyui.yaml logs -f comfyui
+
+# Open WebUI logs
+docker compose -f docker-compose-w-ollama-comfyui.yaml logs -f openwebui
+
+# Ollama logs
+docker compose -f docker-compose-w-ollama-comfyui.yaml logs -f ollama
+```
+
+### Common Issues
+
+1. **ComfyUI Manager not installing**: Check the ComfyUI container logs for any error messages during startup.
+2. **GPU not detected**: Ensure NVIDIA drivers are properly installed and the NVIDIA Container Toolkit is configured.
+3. **Services not starting**: Check if the required ports are available and not used by other applications.
+
+## Important Notes
+
+- This configuration is intended for local development and testing purposes.
+- For production deployments, additional security measures should be implemented:
+    - Change default passwords
+    - Configure proper SSL/TLS certificates
+    - Implement authentication
+    - Adjust worker and thread counts based on server capacity
+    - Configure proper firewalls and access controls
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
