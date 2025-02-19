@@ -20,16 +20,6 @@ RUN pip3 install torch torchvision torchaudio --index-url https://download.pytor
 # Install Python dependencies
 RUN pip install -r requirements.txt
 
-# Create necessary directories
-RUN mkdir -p /app/models/checkpoints \
-    /app/models/vae \
-    /app/models/loras \
-    /app/models/embeddings \
-    /app/models/controlnet \
-    /app/models/upscale_models \
-    /app/output \
-    /app/input
-
 # Install ComfyUI-Manager
 WORKDIR /app/custom_nodes
 RUN git clone https://github.com/ltdrdata/ComfyUI-Manager.git

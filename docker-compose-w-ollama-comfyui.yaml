@@ -111,10 +111,10 @@ services:
     ports:
       - "8188:8188"  # Default ComfyUI port
     volumes:
-      - ./models:/app/models  # Mount models directory
-      - ./output:/app/output  # Mount output directory
-      - ./input:/app/input    # Mount input directory
-      - ./custom_nodes:/app/custom_nodes  # Mount custom nodes
+      - ./comfyui/models:/app/models  # Mount models directory
+      - ./comfyui/output:/app/output  # Mount output directory
+      - ./comfyui/input:/app/input    # Mount input directory
+      - ./comfyui/custom_nodes:/app/custom_nodes  # Mount custom nodes
     networks:
       - searxng
     environment:
